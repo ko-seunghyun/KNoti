@@ -61,4 +61,5 @@ public class MainActivity extends AppCompatActivity {
         Intent Service = new Intent(this, MainService.class);
         stopService(Service);
     }
+
 }

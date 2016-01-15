@@ -27,7 +27,8 @@ public class MainService extends Service {
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
 
-                WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                //WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                WindowManager.LayoutParams.TYPE_PHONE,
 
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
 
@@ -40,6 +41,8 @@ public class MainService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        mManager.removeView(mView);
     }
 
     @Override
@@ -52,4 +55,9 @@ public class MainService extends Service {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
+    public void sendMsg(View v){
+        stopSelf();
+    }
+
 }
