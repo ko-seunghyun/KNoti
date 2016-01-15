@@ -1,5 +1,6 @@
 package com.tistory.fallingstar.knoti;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -8,13 +9,21 @@ import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.accessibility.AccessibilityEvent;
 
-public class MainService extends Service {
+public class MainService extends AccessibilityService {
 
     private View mView;
     private WindowManager mManager;
 
-    public MainService() {
+    /*public MainService() {
+    }*/
+    @Override
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+    }
+
+    @Override
+    public void onInterrupt() {
     }
 
     @Override
@@ -50,11 +59,11 @@ public class MainService extends Service {
         return super.onStartCommand(intent, flags, startId);
     }
 
-    @Override
+    /*@Override
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
-    }
+    }*/
 
     public void sendMsg(View v){
         stopSelf();
