@@ -26,6 +26,7 @@ import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.IOException;
+import android.view.*;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+		
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
+							 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -75,6 +80,11 @@ public class MainActivity extends AppCompatActivity {
 
 
         mMediaProjectionCallback = new MediaProjectionCallback();
+		Intent Service = new Intent(this, MainService.class);
+        //startService(Service);
+        bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
+		
+		moveTaskToBack(true);
     }
 
     @Override
