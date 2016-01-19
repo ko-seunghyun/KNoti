@@ -71,6 +71,10 @@ public class MainService extends Service {
         });
     }
 
+    public void setToggleBtn(boolean b){
+        mToggleButton.setChecked(b);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();

@@ -50,8 +50,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 		
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
-							 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
+		//getWindow().setFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND,
+		//					 WindowManager.LayoutParams.FLAG_BLUR_BEHIND);
 		
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -85,6 +85,13 @@ public class MainActivity extends AppCompatActivity {
         bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
 		
 		moveTaskToBack(true);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        moveTaskToBack(true);
     }
 
     @Override
@@ -142,9 +149,9 @@ public class MainActivity extends AppCompatActivity {
                 initRecorder();
                 prepareRecorder();
 
-                //service stop.
+                //service stop. 녹화 종료 후에 앱 종료 버튼을 따로 만들어야 함.
                 Intent Service = new Intent(MainActivity.this, MainService.class);
-                stopService(Service);
+                unbindService(mConnection);
             }
         }
     };
@@ -180,6 +187,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this,
                     "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
             //mToggleButton.setChecked(false);
+            mService.setToggleBtn(false);
             return;
         }
         mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
