@@ -12,6 +12,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
@@ -27,7 +28,7 @@ public class MainService extends Service {
     private View mView;
     private WindowManager mManager;
     private ToggleButton mToggleButton;
-
+    private WindowManager.LayoutParams mParams;
     public MainService() {
     }
 
@@ -37,7 +38,7 @@ public class MainService extends Service {
         LayoutInflater mInflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mView = mInflater.inflate(R.layout.service_ui, null);
 
-        WindowManager.LayoutParams mParams = new WindowManager.LayoutParams(
+        mParams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
 
@@ -69,7 +70,45 @@ public class MainService extends Service {
                 }
             }
         });
+
+        mView.setOnTouchListener(mViewTouchListener);
     }
+
+    private float mTouchX, mTouchY;
+    private int mViewX, mViewY;
+
+    private View.OnTouchListener mViewTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+
+                    mTouchX = event.getRawX();
+                    mTouchY = event.getRawY();
+                    mViewX = mParams.x;
+                    mViewY = mParams.y;
+
+                    break;
+
+                case MotionEvent.ACTION_UP:
+                    break;
+
+                case MotionEvent.ACTION_MOVE:
+                    int x = (int) (event.getRawX() - mTouchX);
+                    int y = (int) (event.getRawY() - mTouchY);
+
+                    mParams.x = mViewX + x;
+                    mParams.y = mViewY + y;
+
+                    mManager.updateViewLayout(mView, mParams);
+
+                    break;
+            }
+
+            return true;
+        }
+    };
 
     public void setToggleBtn(boolean b){
         mToggleButton.setChecked(b);
