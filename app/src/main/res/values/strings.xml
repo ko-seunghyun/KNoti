@@ -3,4 +3,8 @@
     <string name="action_settings">Settings</string>
     <string name="toggle_off">녹화시작</string>
     <string name="toggle_on">녹화종료</string>
+    <string name="frame_rate">Frame Rate</string>
+    <string name="resolution">Record Resolution</string>
+    <string name="bit_rate">Bit Rate</string>
+    <string name="audio_source">Audio Source</string>
 </resources>

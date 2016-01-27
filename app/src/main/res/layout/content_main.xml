@@ -12,33 +12,93 @@
     tools:context="com.tistory.fallingstar.knoti.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:id="@+id/textView" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="서비스시작"
-        android:id="@+id/btn_start"
-        android:layout_below="@+id/textView"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="49dp"
-        android:onClick="startServiceMethod"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/resolution"
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_res"
+                android:layout_weight="1"/>
 
-    <!--<Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="서비스종료"
-        android:id="@+id/btn_end"
-        android:layout_marginTop="39dp"
-        android:layout_below="@+id/btn_start"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="endServiceMethod"/>-->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="select"
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_set_res"
+                android:layout_weight="1"/>
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/frame_rate"
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_fr"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_set_fra"
+                android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/audio_source"
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_aud"
+                android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_set_aud"
+                android:layout_weight="1"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Ready"
+                android:onClick="startServiceMethod"
+                android:id="@+id/btn_ready"/>
+        </LinearLayout>
+
+    </LinearLayout>
 
 </RelativeLayout>

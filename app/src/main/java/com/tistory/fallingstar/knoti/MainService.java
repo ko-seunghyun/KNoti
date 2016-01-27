@@ -1,6 +1,7 @@
 package com.tistory.fallingstar.knoti;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.ActionBar;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -10,10 +11,13 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
@@ -48,6 +52,14 @@ public class MainService extends Service {
                 //WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT);
 
+        mParams.alpha = 0.5f;
+        //단말 모서리 위치 확인
+        //DisplayMetrics dm = getApplicationContext().getResources().getDisplayMetrics();
+        //mParams.x = dm.widthPixels;
+        //mParams.y = dm.heightPixels;
+
+        mParams.gravity = Gravity.LEFT | Gravity.BOTTOM;
+
         mManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         mManager.addView(mView, mParams);
 
@@ -56,9 +68,9 @@ public class MainService extends Service {
         mToggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                switch (v.getId()){
+                switch (v.getId()) {
                     case R.id.btn_onOff:
-                        if(mCallback == null)
+                        if (mCallback == null)
                             return;
 
                         if (((ToggleButton) v).isChecked()) {
@@ -70,45 +82,7 @@ public class MainService extends Service {
                 }
             }
         });
-
-        mView.setOnTouchListener(mViewTouchListener);
     }
-
-    private float mTouchX, mTouchY;
-    private int mViewX, mViewY;
-
-    private View.OnTouchListener mViewTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-
-                    mTouchX = event.getRawX();
-                    mTouchY = event.getRawY();
-                    mViewX = mParams.x;
-                    mViewY = mParams.y;
-
-                    break;
-
-                case MotionEvent.ACTION_UP:
-                    break;
-
-                case MotionEvent.ACTION_MOVE:
-                    int x = (int) (event.getRawX() - mTouchX);
-                    int y = (int) (event.getRawY() - mTouchY);
-
-                    mParams.x = mViewX + x;
-                    mParams.y = mViewY + y;
-
-                    mManager.updateViewLayout(mView, mParams);
-
-                    break;
-            }
-
-            return true;
-        }
-    };
 
     public void setToggleBtn(boolean b){
         mToggleButton.setChecked(b);
