@@ -14,6 +14,7 @@ import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
@@ -29,7 +30,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import android.view.*;
 
 public class MainActivity extends AppCompatActivity {
@@ -47,13 +52,17 @@ public class MainActivity extends AppCompatActivity {
     private MediaRecorder mMediaRecorder;
     private MainService mService;
 
+
+    private int m_nXRES , m_nYRES, m_nFRA;
+    private String m_strAUD;
+
     //list alert data
     private final CharSequence[] resolutionItems = {
             "1920x1080", "1280x720", "854x480", "640x360", "426x240"
     };
 
     private final CharSequence[] framerateItems = {
-            "30 FPS", "25 FPS", "15 FPS"
+            "30", "25", "15"
     };
 
     private final CharSequence[] audioItems = {
@@ -90,8 +99,24 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mScreenDensity = metrics.densityDpi;
-        DISPLAY_WIDTH = 480;//480;//metrics.widthPixels;
-        DISPLAY_HEIGHT = 640;//640;//metrics.heightPixels;
+        DISPLAY_WIDTH = metrics.widthPixels;
+        DISPLAY_HEIGHT = metrics.heightPixels;
+
+        //설정 위젯들 초기화
+        initOptions();
+
+        SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
+        mTvRes.setText(prefs.getString( "RES",  "640x360"));
+        mTvFra.setText(prefs.getString("FRE", "15"));
+        mTvAud.setText(prefs.getString("AUD", "INTERNAL"));
+
+        String []t1 = mTvRes.getText().toString().split("x");
+        m_nXRES  = Integer.parseInt(t1[1]);
+        m_nYRES  = Integer.parseInt(t1[0]);
+
+        m_nFRA = Integer.parseInt(mTvFra.getText().toString());
+
+        m_strAUD = mTvAud.getText().toString();
 
         mMediaRecorder = new MediaRecorder();
         initRecorder();
@@ -102,13 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaProjectionCallback = new MediaProjectionCallback();
 
-        //
-        //SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
-        //prefs.getString( "RES",  "");
-        //prefs.getInt( "FRE",  0);
 
-        //설정 터치시에
-        initOptions();
     }
 
     @Override
@@ -151,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         mTvRes.setOnTouchListener(tvTouchListener);
         mTvFra.setOnTouchListener(tvTouchListener);
         mTvAud.setOnTouchListener(tvTouchListener);
+
     }
 
     private View.OnTouchListener tvTouchListener = new View.OnTouchListener() {
@@ -186,17 +206,25 @@ public class MainActivity extends AppCompatActivity {
                         //Toast.makeText(getApplicationContext(), resolutionItems[index], Toast.LENGTH_SHORT).show();
                         if (idx == 0) {
                             mTvRes.setText(resolutionItems[index]);
+                            String[] res = resolutionItems[index].toString().split("x");
+                            m_nXRES  = Integer.parseInt(res[1]);
+                            m_nYRES  = Integer.parseInt(res[0]);
                         } else if (idx == 1) {
                             mTvFra.setText(framerateItems[index]);
+                            m_nFRA = Integer.parseInt(framerateItems[index].toString());
                         } else if (idx == 2) {
                             mTvAud.setText(audioItems[index]);
+                            m_strAUD = audioItems[index].toString();
                         }
                         mDialog.dismiss();
+
+                        initRecorder(); //옵션 재설정.
                     }
                 });
 
         mDialog = builder.create();    // 알림창 객체 생성
         mDialog.show();    // 알림창 띄우기
+
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -223,6 +251,8 @@ public class MainActivity extends AppCompatActivity {
             mServiceOnOff = flag;
 
             if(flag == true){
+                initRecorder();
+                prepareRecorder();
                 shareScreen();
             }
             else{
@@ -230,13 +260,12 @@ public class MainActivity extends AppCompatActivity {
                 mMediaRecorder.reset();
                 Log.v(TAG, "Recording Stopped");
                 stopScreenSharing();
-                initRecorder();
-                prepareRecorder();
             }
         }
     };
 
     public void startServiceMethod(View v){
+
         Intent Service = new Intent(this, MainService.class);
         //startService(Service);
         bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
@@ -336,6 +365,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.v(TAG, "Recording Stopped");
                 initRecorder();
                 prepareRecorder();
+
+                //미디어 스캐닝
+                //sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + "폴더위치" + "파일이름" + ".파일확장자")));
             }
             mMediaProjection = null;
             stopScreenSharing();
@@ -356,16 +388,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initRecorder() {
-        mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+
+        mMediaRecorder.reset();
+
+        if(m_strAUD.compareTo("INTERNAL") == 0) {
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+        } else {
+            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+        }
+
+        //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
         mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         mMediaRecorder.setVideoEncodingBitRate(7776000);
-        mMediaRecorder.setVideoFrameRate(30);
-        mMediaRecorder.setVideoSize(480, 640);
+        mMediaRecorder.setVideoFrameRate(m_nFRA);
+        mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
         //mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
-        mMediaRecorder.setOutputFile("/sdcard/capture.mp4");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+        Date date = new Date();
+        String today = df.format(date);
+
+        mMediaRecorder.setOutputFile("/sdcard/"+today+".mp4");
+
+
+        //설정저장.
+        SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("RES", mTvRes.getText().toString());
+        editor.putString("FRE", mTvFra.getText().toString());
+        editor.putString("AUD", mTvAud.getText().toString());
+        editor.commit();
     }
 
 
