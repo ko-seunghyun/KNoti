@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private final CharSequence[] audioItems = {
-            "MIC","INTERNAL"
+            "MIC","MUTE"
     };
 
     private final CharSequence[] titleItems = {
@@ -99,16 +99,22 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         mScreenDensity = metrics.densityDpi;
-        DISPLAY_WIDTH = metrics.widthPixels;
-        DISPLAY_HEIGHT = metrics.heightPixels;
+        DISPLAY_WIDTH = m_nXRES; //metrics.widthPixels;
+        DISPLAY_HEIGHT = m_nYRES;//metrics.heightPixels;
 
         //설정 위젯들 초기화
         initOptions();
 
-        SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
+        //폴더 생성
+        File f = new File("/sdcard/KRec");
+        if (!f.exists()) {
+            f.mkdir();
+        }
+
+        SharedPreferences prefs = getSharedPreferences("KNotiOption", MODE_PRIVATE);
         mTvRes.setText(prefs.getString( "RES",  "640x360"));
         mTvFra.setText(prefs.getString("FRE", "15"));
-        mTvAud.setText(prefs.getString("AUD", "INTERNAL"));
+        mTvAud.setText(prefs.getString("AUD", "MUTE"));
 
         String []t1 = mTvRes.getText().toString().split("x");
         m_nXRES  = Integer.parseInt(t1[1]);
@@ -118,9 +124,11 @@ public class MainActivity extends AppCompatActivity {
 
         m_strAUD = mTvAud.getText().toString();
 
+
+
         mMediaRecorder = new MediaRecorder();
         initRecorder();
-        prepareRecorder();
+        //prepareRecorder();
 
         mProjectionManager = (MediaProjectionManager) getSystemService
                 (Context.MEDIA_PROJECTION_SERVICE);
@@ -209,6 +217,8 @@ public class MainActivity extends AppCompatActivity {
                             String[] res = resolutionItems[index].toString().split("x");
                             m_nXRES  = Integer.parseInt(res[1]);
                             m_nYRES  = Integer.parseInt(res[0]);
+                            DISPLAY_WIDTH = m_nXRES;
+                            DISPLAY_HEIGHT = m_nYRES;
                         } else if (idx == 1) {
                             mTvFra.setText(framerateItems[index]);
                             m_nFRA = Integer.parseInt(framerateItems[index].toString());
@@ -252,6 +262,7 @@ public class MainActivity extends AppCompatActivity {
 
             if(flag == true){
                 initRecorder();
+                setOutFile();
                 prepareRecorder();
                 shareScreen();
             }
@@ -391,8 +402,8 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaRecorder.reset();
 
-        if(m_strAUD.compareTo("INTERNAL") == 0) {
-            mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+        if(m_strAUD.compareTo("MUTE") == 0) {
+            //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
         } else {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         }
@@ -406,12 +417,6 @@ public class MainActivity extends AppCompatActivity {
         mMediaRecorder.setVideoFrameRate(m_nFRA);
         mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
         //mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
-        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
-        Date date = new Date();
-        String today = df.format(date);
-
-        mMediaRecorder.setOutputFile("/sdcard/"+today+".mp4");
-
 
         //설정저장.
         SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
@@ -420,6 +425,14 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("FRE", mTvFra.getText().toString());
         editor.putString("AUD", mTvAud.getText().toString());
         editor.commit();
+    }
+
+    public void setOutFile(){
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd-hh-mm-ss");
+        Date date = new Date();
+        String today = df.format(date);
+
+        mMediaRecorder.setOutputFile("/sdcard/KRec/"+today+".mp4");
     }
 
 

@@ -37,7 +37,8 @@
                 android:textSize="20sp"
                 android:layout_gravity="center_vertical"
                 android:id="@+id/tv_set_res"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                android:background="@drawable/tv_border"/>
 
         </LinearLayout>
 
