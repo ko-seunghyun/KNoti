@@ -7,4 +7,5 @@
     <string name="resolution">Record Resolution</string>
     <string name="bit_rate">Bit Rate</string>
     <string name="audio_source">Audio Source</string>
+    <string name="screen_mode">Screen Mode</string>
 </resources>

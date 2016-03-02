@@ -62,7 +62,8 @@
                 android:textSize="20sp"
                 android:layout_gravity="center_vertical"
                 android:id="@+id/tv_set_fra"
-                android:layout_weight="1"/>
+                android:layout_weight="1"
+                android:background="@drawable/tv_border"/>
         </LinearLayout>
 
         <LinearLayout
@@ -85,7 +86,32 @@
                 android:textSize="20sp"
                 android:layout_gravity="center_vertical"
                 android:id="@+id/tv_set_aud"
+                android:layout_weight="1"
+                android:background="@drawable/tv_border"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/screen_mode"
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_mode"
                 android:layout_weight="1"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="20sp"
+                android:layout_gravity="center_vertical"
+                android:id="@+id/tv_set_mode"
+                android:layout_weight="1"
+                android:background="@drawable/tv_border"/>
         </LinearLayout>
 
         <LinearLayout

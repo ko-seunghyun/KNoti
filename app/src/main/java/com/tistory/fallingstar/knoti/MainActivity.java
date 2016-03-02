@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     private int m_nXRES , m_nYRES, m_nFRA;
-    private String m_strAUD;
+    private String m_strAUD, m_strMode;
 
     //list alert data
     private final CharSequence[] resolutionItems = {
@@ -69,11 +69,15 @@ public class MainActivity extends AppCompatActivity {
             "MIC","MUTE"
     };
 
-    private final CharSequence[] titleItems = {
-            "해상도 선택", "프레임 레이트 선택", "오디오 소스 선택"
+    private final CharSequence[] modeItems = {
+            "horizontal","vertical"
     };
 
-    private TextView mTvRes, mTvFra, mTvAud;
+    private final CharSequence[] titleItems = {
+            "해상도 선택", "프레임 레이트 선택", "오디오 소스 선택", "녹화 모드 선택"
+    };
+
+    private TextView mTvRes, mTvFra, mTvAud, mTvMode;
     public AlertDialog mDialog;
 
     @Override
@@ -96,11 +100,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });*/
 
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        mScreenDensity = metrics.densityDpi;
-        DISPLAY_WIDTH = m_nXRES; //metrics.widthPixels;
-        DISPLAY_HEIGHT = m_nYRES;//metrics.heightPixels;
 
         //설정 위젯들 초기화
         initOptions();
@@ -115,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
         mTvRes.setText(prefs.getString( "RES",  "640x360"));
         mTvFra.setText(prefs.getString("FRE", "15"));
         mTvAud.setText(prefs.getString("AUD", "MUTE"));
+        mTvMode.setText(prefs.getString("MODE", "horizontal"));
 
         String []t1 = mTvRes.getText().toString().split("x");
         m_nXRES  = Integer.parseInt(t1[1]);
@@ -123,7 +123,14 @@ public class MainActivity extends AppCompatActivity {
         m_nFRA = Integer.parseInt(mTvFra.getText().toString());
 
         m_strAUD = mTvAud.getText().toString();
+        m_strMode = mTvMode.getText().toString();
 
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        mScreenDensity = metrics.densityDpi;
+        //DISPLAY_WIDTH = m_nXRES; //metrics.widthPixels;
+        //DISPLAY_HEIGHT = m_nYRES;//metrics.heightPixels;
 
 
         mMediaRecorder = new MediaRecorder();
@@ -174,11 +181,12 @@ public class MainActivity extends AppCompatActivity {
         mTvRes = (TextView)findViewById(R.id.tv_set_res);
         mTvFra = (TextView)findViewById(R.id.tv_set_fra);
         mTvAud = (TextView)findViewById(R.id.tv_set_aud);
+        mTvMode =(TextView)findViewById(R.id.tv_set_mode);
 
         mTvRes.setOnTouchListener(tvTouchListener);
         mTvFra.setOnTouchListener(tvTouchListener);
         mTvAud.setOnTouchListener(tvTouchListener);
-
+        mTvMode.setOnTouchListener(tvTouchListener);
     }
 
     private View.OnTouchListener tvTouchListener = new View.OnTouchListener() {
@@ -192,6 +200,8 @@ public class MainActivity extends AppCompatActivity {
                     myDialog(1);
                 }else if(mTvAud.getId() == v.getId()){
                     myDialog(2);
+                }else if(mTvMode.getId() == v.getId()){
+                    myDialog(3);
                 }
             }
             return true;
@@ -205,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
         if(idx == 0) ref = resolutionItems;
         else if(idx == 1) ref = framerateItems;
         else if(idx == 2) ref = audioItems;
+        else if(idx == 3) ref = modeItems;
 
         // 여기서 부터는 알림창의 속성 설정
         builder.setTitle(titleItems[idx])        // 제목 설정
@@ -215,17 +226,21 @@ public class MainActivity extends AppCompatActivity {
                         if (idx == 0) {
                             mTvRes.setText(resolutionItems[index]);
                             String[] res = resolutionItems[index].toString().split("x");
-                            m_nXRES  = Integer.parseInt(res[1]);
-                            m_nYRES  = Integer.parseInt(res[0]);
-                            DISPLAY_WIDTH = m_nXRES;
-                            DISPLAY_HEIGHT = m_nYRES;
+                            m_nXRES = Integer.parseInt(res[1]);
+                            m_nYRES = Integer.parseInt(res[0]);
+                            //DISPLAY_WIDTH = m_nXRES;
+                            //DISPLAY_HEIGHT = m_nYRES;
                         } else if (idx == 1) {
                             mTvFra.setText(framerateItems[index]);
                             m_nFRA = Integer.parseInt(framerateItems[index].toString());
                         } else if (idx == 2) {
                             mTvAud.setText(audioItems[index]);
                             m_strAUD = audioItems[index].toString();
+                        } else if (idx == 3) {
+                            mTvMode.setText(modeItems[index]);
+                            m_strMode = modeItems[index].toString();
                         }
+
                         mDialog.dismiss();
 
                         initRecorder(); //옵션 재설정.
@@ -360,8 +375,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private VirtualDisplay createVirtualDisplay() {
+        int nX, nY;
+        if(m_strMode.compareTo("horizontal") == 0){
+            nX = m_nYRES; nY = m_nXRES;
+        }else{
+            nX = m_nXRES; nY = m_nYRES;
+        }
+
         return mMediaProjection.createVirtualDisplay("MainActivity",
-                DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
+                //DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
+                nX, nY, mScreenDensity,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 mMediaRecorder.getSurface(), null /*Callbacks*/, null /*Handler*/);
     }
@@ -403,19 +426,28 @@ public class MainActivity extends AppCompatActivity {
         mMediaRecorder.reset();
 
         if(m_strAUD.compareTo("MUTE") == 0) {
+            //mute
             //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+            //mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         } else {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         }
 
-        //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         mMediaRecorder.setVideoEncodingBitRate(7776000);
         mMediaRecorder.setVideoFrameRate(m_nFRA);
-        mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
+
+        if(m_strMode.compareTo("horizontal")==0){
+            mMediaRecorder.setVideoSize(m_nYRES, m_nXRES);
+        }else{
+            mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
+        }
+
+        //mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
+
         //mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
 
         //설정저장.
@@ -424,6 +456,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("RES", mTvRes.getText().toString());
         editor.putString("FRE", mTvFra.getText().toString());
         editor.putString("AUD", mTvAud.getText().toString());
+        editor.putString("MODE", mTvMode.getText().toString());
         editor.commit();
     }
 
