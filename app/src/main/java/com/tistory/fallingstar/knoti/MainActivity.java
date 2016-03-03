@@ -1,5 +1,8 @@
 package com.tistory.fallingstar.knoti;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+
 import android.app.AlertDialog;
 import android.app.IntentService;
 import android.content.ComponentName;
@@ -16,6 +19,7 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -55,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int m_nXRES , m_nYRES, m_nFRA;
     private String m_strAUD, m_strMode;
+    private String m_strOutPath;
 
     //list alert data
     private final CharSequence[] resolutionItems = {
@@ -66,11 +71,11 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private final CharSequence[] audioItems = {
-            "MIC","MUTE"
+            "MIC","음소거"
     };
 
     private final CharSequence[] modeItems = {
-            "horizontal","vertical"
+            "가로","세로"
     };
 
     private final CharSequence[] titleItems = {
@@ -91,6 +96,10 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
         /*FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,16 +114,16 @@ public class MainActivity extends AppCompatActivity {
         initOptions();
 
         //폴더 생성
-        File f = new File("/sdcard/KRec");
+        File f = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/");
         if (!f.exists()) {
             f.mkdir();
         }
 
         SharedPreferences prefs = getSharedPreferences("KNotiOption", MODE_PRIVATE);
-        mTvRes.setText(prefs.getString( "RES",  "640x360"));
-        mTvFra.setText(prefs.getString("FRE", "15"));
-        mTvAud.setText(prefs.getString("AUD", "MUTE"));
-        mTvMode.setText(prefs.getString("MODE", "horizontal"));
+        mTvRes.setText(prefs.getString( "RES",  "1280x720"));
+        mTvFra.setText(prefs.getString("FRE", "25"));
+        mTvAud.setText(prefs.getString("AUD", "MIC"));
+        mTvMode.setText(prefs.getString("MODE", "가로"));
 
         String []t1 = mTvRes.getText().toString().split("x");
         m_nXRES  = Integer.parseInt(t1[1]);
@@ -142,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaProjectionCallback = new MediaProjectionCallback();
 
-
+        //화면꺼짐 방지
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
     @Override
@@ -280,12 +290,19 @@ public class MainActivity extends AppCompatActivity {
                 setOutFile();
                 prepareRecorder();
                 shareScreen();
+                Toast.makeText(getApplicationContext(), "빨간버튼 클릭시 녹화 중지.", Toast.LENGTH_SHORT).show();
             }
             else{
                 mMediaRecorder.stop();
                 mMediaRecorder.reset();
                 Log.v(TAG, "Recording Stopped");
                 stopScreenSharing();
+
+                Toast.makeText(getApplicationContext(), "회색버튼 클릭시 녹화 시작.", Toast.LENGTH_SHORT).show();
+                //미디어 스캐닝
+                //sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + "폴더위치" + "파일이름" + ".파일확장자")));
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + m_strOutPath)));
+
             }
         }
     };
@@ -297,6 +314,8 @@ public class MainActivity extends AppCompatActivity {
         bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
 
         moveTaskToBack(false);
+
+        Toast.makeText(getApplicationContext(), "회색버튼 클릭시 녹화 시작.", Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -376,7 +395,7 @@ public class MainActivity extends AppCompatActivity {
 
     private VirtualDisplay createVirtualDisplay() {
         int nX, nY;
-        if(m_strMode.compareTo("horizontal") == 0){
+        if(m_strMode.compareTo("가로") == 0){
             nX = m_nYRES; nY = m_nXRES;
         }else{
             nX = m_nXRES; nY = m_nYRES;
@@ -399,9 +418,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.v(TAG, "Recording Stopped");
                 initRecorder();
                 prepareRecorder();
-
-                //미디어 스캐닝
-                //sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + "폴더위치" + "파일이름" + ".파일확장자")));
             }
             mMediaProjection = null;
             stopScreenSharing();
@@ -425,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaRecorder.reset();
 
-        if(m_strAUD.compareTo("MUTE") == 0) {
+        if(m_strAUD.compareTo("음소거") == 0) {
             //mute
             //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
             //mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -440,7 +456,7 @@ public class MainActivity extends AppCompatActivity {
         mMediaRecorder.setVideoEncodingBitRate(7776000);
         mMediaRecorder.setVideoFrameRate(m_nFRA);
 
-        if(m_strMode.compareTo("horizontal")==0){
+        if(m_strMode.compareTo("가로")==0){
             mMediaRecorder.setVideoSize(m_nYRES, m_nXRES);
         }else{
             mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
@@ -465,7 +481,8 @@ public class MainActivity extends AppCompatActivity {
         Date date = new Date();
         String today = df.format(date);
 
-        mMediaRecorder.setOutputFile("/sdcard/KRec/"+today+".mp4");
+        m_strOutPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/"+today+".mp4";
+        mMediaRecorder.setOutputFile(m_strOutPath);
     }
 
 
