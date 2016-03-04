@@ -459,12 +459,12 @@ public class MainActivity extends AppCompatActivity {
             //mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         } else {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         }
 
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         mMediaRecorder.setVideoEncodingBitRate(7776000);
         mMediaRecorder.setVideoFrameRate(m_nFRA);
 
