@@ -464,7 +464,14 @@ public class MainActivity extends AppCompatActivity {
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
-        mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        if(m_strAUD.compareTo("음소거") == 0) {
+            //mute
+            //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
+            //mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        } else {
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+        }
+
         mMediaRecorder.setVideoEncodingBitRate(7776000);
         mMediaRecorder.setVideoFrameRate(m_nFRA);
 

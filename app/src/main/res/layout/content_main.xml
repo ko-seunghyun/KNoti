@@ -122,7 +122,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ready"
+                android:text="설정이 완료되면 클릭하세요."
                 android:onClick="startServiceMethod"
                 android:id="@+id/btn_ready"/>
         </LinearLayout>
