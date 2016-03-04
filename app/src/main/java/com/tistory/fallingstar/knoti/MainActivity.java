@@ -61,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
     private String m_strAUD, m_strMode;
     private String m_strOutPath;
 
+    //뒤로가기 두번에 종료.
+    private BackPressCloseHandler backPressCloseHandler;
+
     //list alert data
     private final CharSequence[] resolutionItems = {
             "1920x1080", "1280x720", "854x480", "640x360", "426x240"
@@ -153,6 +156,8 @@ public class MainActivity extends AppCompatActivity {
 
         //화면꺼짐 방지
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        backPressCloseHandler = new BackPressCloseHandler(this);
     }
 
     @Override
@@ -181,10 +186,17 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            this.finish();
+            //return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        //super.onBackPressed();
+        backPressCloseHandler.onBackPressed();
     }
 
     private void initOptions(){
