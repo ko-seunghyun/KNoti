@@ -5,10 +5,15 @@ import com.google.android.gms.ads.AdView;
 
 import android.app.AlertDialog;
 import android.app.IntentService;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.hardware.display.DisplayManager;
@@ -30,12 +35,15 @@ import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -55,7 +63,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean mServiceOnOff = false;
     private MediaRecorder mMediaRecorder;
     private MainService mService;
-
+    private Surface mSurface;
 
     private int m_nXRES , m_nYRES, m_nFRA;
     private String m_strAUD, m_strMode;
@@ -63,6 +71,14 @@ public class MainActivity extends AppCompatActivity {
 
     //뒤로가기 두번에 종료.
     private BackPressCloseHandler backPressCloseHandler;
+
+    private static final String RECORD_START_ACTION = "com.example.packagename.START";
+    private static final String RECORD_END_ACTION = "com.example.packagename.END";
+    private static final String RECORD_EXIT_ACTION = "com.example.packagename.EXIT";
+
+    private final int NOTIFICATION_ID = 1;
+
+    private boolean m_bRecordFlag = false;
 
     //list alert data
     private final CharSequence[] resolutionItems = {
@@ -158,6 +174,123 @@ public class MainActivity extends AppCompatActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         backPressCloseHandler = new BackPressCloseHandler(this);
+
+        initNotification();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(RECORD_START_ACTION);
+        intentFilter.addAction(RECORD_END_ACTION);
+        registerReceiver(buttonBroadcastReceiver, intentFilter);
+    }
+
+    private RemoteViews contentiew;
+    private Notification noti;
+    private NotificationManager nm;
+    private Notification.Builder builder;
+    public void initNotification(){
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        builder = new Notification.Builder(getApplicationContext());
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+
+        contentiew = new RemoteViews(getPackageName(), R.layout.remoteview);
+
+        Intent intent_ = new Intent(RECORD_START_ACTION);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent_,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        contentiew.setOnClickPendingIntent(R.id.btn_noti_start, pendingIntent);
+
+        Intent intent_1 = new Intent(RECORD_END_ACTION);
+        PendingIntent pendingIntent1 = PendingIntent.getBroadcast(this, 1, intent_1,
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        contentiew.setOnClickPendingIntent(R.id.btn_noti_end, pendingIntent1);
+
+        //contentiew.setOnClickPendingIntent(R.id.button, pendingIntent);
+        builder.setContent(contentiew);
+        noti = builder.build();
+        //noti.contentView = contentiew;
+        noti.flags  |= Notification.FLAG_NO_CLEAR;
+        nm.notify(NOTIFICATION_ID, noti);
+    }
+
+    BroadcastReceiver buttonBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // TODO Auto-generated method stub
+            String action = intent.getAction();
+            if(RECORD_START_ACTION.equals(action)) {
+
+                if(!m_bRecordFlag){
+
+                    //statusBarUp();
+
+                    Toast.makeText(context, "녹화시작", Toast.LENGTH_SHORT).show();
+                    if (mMediaProjection != null) {
+                        initRecorder();
+                        setOutFile();
+                        prepareRecorder();
+                        shareScreen();
+                    }
+                    else {
+                        shareScreen();
+                    }
+                }
+
+                //TextView tvStatus = (TextView) findViewById(R.id.tv_status);
+                //tvStatus.setText("녹화중");
+                contentiew.setTextViewText(R.id.tv_status, "녹화중");
+                builder.setContent(contentiew);
+                nm.notify(NOTIFICATION_ID, builder.build());
+                m_bRecordFlag = true;
+
+            } else if(RECORD_END_ACTION.equals(action)) {
+                if(m_bRecordFlag){
+                    mMediaRecorder.stop();
+                    mMediaRecorder.reset();
+                    Log.v(TAG, "Recording Stopped");
+                    stopScreenSharing();
+                    Toast.makeText(context, "녹화종료.", Toast.LENGTH_SHORT).show();
+                    //미디어 스캐닝
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.parse("file://" + m_strOutPath)));
+                }
+
+                contentiew.setTextViewText(R.id.tv_status, "녹화종료");
+                builder.setContent(contentiew);
+                //noti =  builder.build();
+                //noti.flags  |= Notification.FLAG_AUTO_CANCEL;
+                nm.notify(NOTIFICATION_ID, builder.build());
+
+                m_bRecordFlag = false;
+            } else {
+                //?????
+            }
+        }
+    };
+
+    public void statusBarUp(){
+        try{
+            Object sbservice = getApplication().getSystemService("statusbar");  // statusbar 시스템 서비스 객체를 가져온다.
+            Class<?> statusbarManager;
+            statusbarManager = Class.forName("android.app.StatusBarManager");   // StatusBarManager 클래스의 정보를 담은 Class 객체를 가져온다.
+            //Method showsb = statusbarManager.getMethod("expand");               // 상태바를 내리는 expand 메서드를 가져온 뒤,
+            Method showsb = statusbarManager.getMethod("collapse");               // 상태바를 내리는 expand 메서드를 가져온 뒤,
+            showsb.invoke(sbservice);                                           // 위에서 얻은 statusbar 시스템 서비스 객체를 대상으로, expand 메서드 호출!
+        } catch (ClassNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (NoSuchMethodException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 
     @Override
@@ -166,8 +299,55 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+    }
+
+    @Override
     protected void onRestart() {
         super.onRestart();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mMediaProjection != null) {
+            mMediaProjection.stop();
+            mMediaProjection = null;
+        }
+
+        if (mVirtualDisplay != null) {
+            mVirtualDisplay.release();
+            mVirtualDisplay = null;
+        }
+
+        if(mMediaRecorder != null) {
+            mMediaRecorder.release();
+            mMediaRecorder = null;
+        }
+
+        //앱 종료시 서비스도 같이 종료.
+        if(mService != null) {
+            Intent Service = new Intent(MainActivity.this, MainService.class);
+            unbindService(mConnection);
+        }
+
+        if(nm != null){
+            nm.cancel(NOTIFICATION_ID);
+        }
+
     }
 
     @Override
@@ -298,10 +478,16 @@ public class MainActivity extends AppCompatActivity {
             mServiceOnOff = flag;
 
             if(flag == true){
-                initRecorder();
-                setOutFile();
-                prepareRecorder();
-                shareScreen();
+                if (mMediaProjection != null) {
+                    initRecorder();
+                    setOutFile();
+                    prepareRecorder();
+                    shareScreen();
+                }
+                else {
+                    shareScreen();
+                }
+
                 Toast.makeText(getApplicationContext(), "빨간버튼 클릭시 녹화 중지.", Toast.LENGTH_SHORT).show();
             }
             else{
@@ -320,14 +506,13 @@ public class MainActivity extends AppCompatActivity {
     };
 
     public void startServiceMethod(View v){
-
-        Intent Service = new Intent(this, MainService.class);
+        //Intent Service = new Intent(this, MainService.class);
         //startService(Service);
-        bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
+        //bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
 
-        moveTaskToBack(false);
+        moveTaskToBack(true);
 
-        Toast.makeText(getApplicationContext(), "회색버튼 클릭시 녹화 시작.", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(getApplicationContext(), "회색버튼 클릭시 녹화 시작.", Toast.LENGTH_SHORT).show();
     }
 
     /*
@@ -336,31 +521,7 @@ public class MainActivity extends AppCompatActivity {
         stopService(Service);
     }*/
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mMediaProjection != null) {
-            mMediaProjection.stop();
-            mMediaProjection = null;
-        }
 
-        if (mVirtualDisplay != null) {
-            mVirtualDisplay.release();
-            mVirtualDisplay = null;
-        }
-
-        if(mMediaRecorder != null) {
-            mMediaRecorder.release();
-            mMediaRecorder = null;
-        }
-
-        //앱 종료시 서비스도 같이 종료.
-        if(mService != null) {
-            Intent Service = new Intent(MainActivity.this, MainService.class);
-            unbindService(mConnection);
-        }
-
-    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -380,11 +541,30 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         //권한 요청이 성공한 경우.
-        moveTaskToBack(false);
+        moveTaskToBack(true);
+
+        initRecorder();
+        setOutFile();
+        prepareRecorder();
+
         mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
         mMediaProjection.registerCallback(mMediaProjectionCallback, null);
-        mVirtualDisplay = createVirtualDisplay();
+        try{
+            mVirtualDisplay = createVirtualDisplay();
+        }catch (Exception e){
+            e.printStackTrace();
+            return;
+        }
+
         mMediaRecorder.start();
+
+        //액티비티 생명 주기에 따라 서비스가 종료되니 다시 되살림.
+        /*if(mService == null) {
+            Intent Service = new Intent(this, MainService.class);
+            bindService(Service, mConnection, Context.BIND_AUTO_CREATE);
+
+        }*/
+
     }
 
     private void shareScreen() {
@@ -405,19 +585,22 @@ public class MainActivity extends AppCompatActivity {
         //mMediaRecorder.release();
     }
 
+
+
     private VirtualDisplay createVirtualDisplay() {
         int nX, nY;
         if(m_strMode.compareTo("가로") == 0){
             nX = m_nYRES; nY = m_nXRES;
-        }else{
-            nX = m_nXRES; nY = m_nYRES;
+        }else {
+            nX = m_nXRES;
+            nY = m_nYRES;
         }
 
         return mMediaProjection.createVirtualDisplay("MainActivity",
                 //DISPLAY_WIDTH, DISPLAY_HEIGHT, mScreenDensity,
                 nX, nY, mScreenDensity,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
-                mMediaRecorder.getSurface(), null /*Callbacks*/, null /*Handler*/);
+                mSurface/*mMediaRecorder.getSurface()*/, null /*Callbacks*/, null /*Handler*/);
     }
 
     private class MediaProjectionCallback extends MediaProjection.Callback {
@@ -447,6 +630,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
             finish();
         }
+        mSurface = mMediaRecorder.getSurface();
     }
 
     private void initRecorder() {
@@ -463,7 +647,9 @@ public class MainActivity extends AppCompatActivity {
 
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
         mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
+
+        mMediaRecorder.setVideoEncodingBitRate(7776000);
+
         if(m_strAUD.compareTo("음소거") == 0) {
             //mute
             //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
@@ -471,19 +657,19 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         }
-
-        mMediaRecorder.setVideoEncodingBitRate(7776000);
-        mMediaRecorder.setVideoFrameRate(m_nFRA);
+        mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
 
         if(m_strMode.compareTo("가로")==0){
             mMediaRecorder.setVideoSize(m_nYRES, m_nXRES);
         }else{
             mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
         }
+        mMediaRecorder.setVideoFrameRate(m_nFRA);
 
         //mMediaRecorder.setVideoSize(m_nXRES, m_nYRES);
 
         //mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_1080P));
+
 
         //설정저장.
         SharedPreferences prefs = getSharedPreferences("KNotiOption" ,MODE_PRIVATE);
@@ -500,7 +686,8 @@ public class MainActivity extends AppCompatActivity {
         Date date = new Date();
         String today = df.format(date);
 
-        m_strOutPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/"+today+".mp4";
+        //m_strOutPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/"+today+".mp4";
+        m_strOutPath =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + today + ".mp4";
         mMediaRecorder.setOutputFile(m_strOutPath);
     }
 

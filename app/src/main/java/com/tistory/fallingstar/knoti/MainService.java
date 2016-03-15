@@ -16,6 +16,8 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
+import android.view.Surface;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -33,6 +35,7 @@ public class MainService extends Service {
     private WindowManager mManager;
     private ToggleButton mToggleButton;
     private WindowManager.LayoutParams mParams;
+
     public MainService() {
     }
 
@@ -82,6 +85,7 @@ public class MainService extends Service {
                 }
             }
         });
+
     }
 
     public void setToggleBtn(boolean b){
