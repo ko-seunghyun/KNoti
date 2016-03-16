@@ -122,7 +122,7 @@
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="설정이 완료되면 클릭하세요."
+                android:text="상단바를 통해 녹화를 시작하십시오."
                 android:onClick="startServiceMethod"
                 android:id="@+id/btn_ready"/>
         </LinearLayout>
