@@ -73,6 +73,8 @@ public class MainService extends Service {
         intentFilter.addAction(RECORD_END_ACTION);
         registerReceiver(buttonBroadcastReceiver, intentFilter);
 
+        IntentFilter powerIntentFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mPowerBroadcast, powerIntentFilter);
     }
 
     public void setToggleBtn(boolean b){
@@ -98,6 +100,9 @@ public class MainService extends Service {
         intentFilter.addAction(RECORD_START_ACTION);
         intentFilter.addAction(RECORD_END_ACTION);
         registerReceiver(buttonBroadcastReceiver, intentFilter);
+
+        IntentFilter powerIntentFilter = new IntentFilter(Intent.ACTION_SCREEN_OFF);
+        registerReceiver(mPowerBroadcast, powerIntentFilter);
 
         return super.onStartCommand(intent, flags, startId);
     }
@@ -224,6 +229,40 @@ public class MainService extends Service {
             } else {
                 //?????
             }
+        }
+    };
+
+    BroadcastReceiver mPowerBroadcast = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals("android.intent.action.SCREEN_OFF")) {
+            // 스크린이 꺼질때 이벤트
+                if(m_bRecordFlag){
+
+                    m_bRecordFlag = false;
+
+                    myMediaRecorder.setServiceOnFlag(false);
+
+                    myMediaRecorder.stopRecord();
+                    Log.v(TAG, "Recording Stopped");
+                    myMediaRecorder.stopScreenSharing();
+                    Toast.makeText(context, "녹화종료.", Toast.LENGTH_SHORT).show();
+                    myMediaRecorder.scanMedia();
+                }
+
+                contentiew.setTextViewText(R.id.tv_status, "녹화종료");
+                builder.setContent(contentiew);
+                //noti =  builder.build();
+                //noti.flags  |= Notification.FLAG_AUTO_CANCEL;
+                nm.notify(NOTIFICATION_ID, builder.build());
+            }
+            else if(intent.getAction().equals("android.intent.action.SCREEN_ON")) {
+            // 스크린이 켜질때 이벤트
+            }
+            else{
+
+            }
+            return;
         }
     };
 

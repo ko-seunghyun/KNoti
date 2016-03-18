@@ -121,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences("KNotiOption", MODE_PRIVATE);
         mTvRes.setText(prefs.getString( "RES",  "1280x720"));
-        mTvFra.setText(prefs.getString("FRE", "25"));
+        mTvFra.setText(prefs.getString("FRE", "15"));
         mTvAud.setText(prefs.getString("AUD", "MIC"));
         mTvMode.setText(prefs.getString("MODE", "가로"));
 
