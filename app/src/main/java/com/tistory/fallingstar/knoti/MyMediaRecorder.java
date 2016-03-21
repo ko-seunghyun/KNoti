@@ -107,12 +107,16 @@ public class MyMediaRecorder {
 
         mMediaRecorder.setVideoEncodingBitRate(7776000);
 
+
+
         if(mStrAUD.compareTo("음소거") == 0) {
             //mute
             //mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
             //mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
         } else {
-            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mMediaRecorder.setAudioSamplingRate(44100);
+            mMediaRecorder.setAudioEncodingBitRate(96000);
+            mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
         }
         mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
 
