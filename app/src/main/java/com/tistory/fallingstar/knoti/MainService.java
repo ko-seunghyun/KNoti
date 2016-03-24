@@ -175,7 +175,7 @@ public class MainService extends Service {
                     statusBarUp();
 
                     try{
-                        Thread.sleep(1000);
+                        Thread.sleep(1500);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -288,6 +288,12 @@ public class MainService extends Service {
     }
 
     public void confirmPermission(int resultCode, Intent data){
+
+        try{
+            Thread.sleep(1500);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         myMediaRecorder.createMediaProjection(resultCode, data);
 

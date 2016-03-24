@@ -8,5 +8,7 @@
     <string name="bit_rate">Bit Rate</string>
     <string name="audio_source">오디오입력</string>
     <string name="screen_mode">녹화모드</string>
+    <string name="disp1">해상도/프레임 등을 설정하세요.</string>
+    <string name="disp2">밑줄친 부분을 눌러 설정하세요.</string>
     <string name="banner_ad_unit_id">ca-app-pub-0225235189181315/2260046902</string>
 </resources>
