@@ -142,12 +142,12 @@ public class MyMediaRecorder {
             mMediaRecorder.prepare();
         } catch (IllegalStateException e) {
             e.printStackTrace();
-            Toast.makeText(mContext, "녹화 준비 실패 - 상태이상", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "출력 포맷 미입력.", Toast.LENGTH_SHORT).show();
             return;
             //finish();
         } catch (IOException e) {
             e.printStackTrace();
-            Toast.makeText(mContext, "녹화 준비 실패 - 파일경로이상", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "출력 파일 경로 없음.", Toast.LENGTH_SHORT).show();
             return;
             //finish();
         }
@@ -206,8 +206,28 @@ public class MyMediaRecorder {
     }
 
     public void stopRecord(){
-        mMediaRecorder.stop();
-        mMediaRecorder.reset();
+
+        try
+        {
+            mMediaRecorder.stop();
+            mMediaRecorder.reset();
+        }
+        catch (Exception e)
+        {
+            //녹화 종료 실패시 파일 지움
+            try
+            {
+                File f = new File(m_strOutPath);
+                f.delete();
+            }catch (Exception e1)
+            {
+                e1.printStackTrace();
+                Toast.makeText(mContext, "파일 삭제 실패", Toast.LENGTH_SHORT).show();
+            }
+
+            return;
+        }
+
     }
 
     public void scanMedia(){
@@ -220,8 +240,23 @@ public class MyMediaRecorder {
         Date date = new Date();
         String today = df.format(date);
 
+        String DCIM_PATH = "";
+        try
+        {
+            File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+
+            if (!f.exists())
+                f.mkdirs();
+
+            DCIM_PATH = f.getAbsolutePath();
+
+        }catch (Exception e)
+        {
+            Toast.makeText(mContext, "DCIM 폴더를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+        }
+
         //m_strOutPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/"+today+".mp4";
-        m_strOutPath =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + File.separator + today + ".mp4";
+        m_strOutPath = DCIM_PATH  + File.separator + today + ".mp4";
         mMediaRecorder.setOutputFile(m_strOutPath);
     }
 

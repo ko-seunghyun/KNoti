@@ -180,7 +180,6 @@ public class MainService extends Service {
                         e.printStackTrace();
                     }
 
-
                     Toast.makeText(context, "녹화시작", Toast.LENGTH_SHORT).show();
 
                     myMediaRecorder.initRecorder();
@@ -196,7 +195,7 @@ public class MainService extends Service {
                         myMediaRecorder.startRecord();
                     }
                 }
-;
+
                 contentiew.setTextViewText(R.id.tv_status, "녹화중");
                 builder.setContent(contentiew);
                 nm.notify(NOTIFICATION_ID, builder.build());
@@ -288,6 +287,17 @@ public class MainService extends Service {
     }
 
     public void confirmPermission(int resultCode, Intent data){
+
+        //녹화 권한 실패.
+        if(resultCode != -1)
+        {
+            m_bRecordFlag = false;
+
+            contentiew.setTextViewText(R.id.tv_status, "권한실패");
+            builder.setContent(contentiew);
+            nm.notify(NOTIFICATION_ID, builder.build());
+            return;
+        }
 
         try{
             Thread.sleep(1500);

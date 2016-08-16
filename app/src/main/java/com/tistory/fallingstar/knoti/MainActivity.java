@@ -332,6 +332,8 @@ public class MainActivity extends AppCompatActivity {
         if (resultCode != RESULT_OK) {
             Toast.makeText(this,
                     "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
+            //권한 수락이 안된 경우.
+            mService.confirmPermission(resultCode, data);
             return;
         }
         //권한 요청이 성공한 경우.
