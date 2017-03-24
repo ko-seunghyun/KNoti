@@ -243,16 +243,39 @@ public class MyMediaRecorder {
         String DCIM_PATH = "";
         try
         {
-            File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+            DCIM_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
+            DCIM_PATH = DCIM_PATH + File.separator + "KRec";
+            File f = new File(DCIM_PATH);
 
-            if (!f.exists())
+            if(!f.exists())
+            {
                 f.mkdirs();
+            }
 
             DCIM_PATH = f.getAbsolutePath();
 
+            /*File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+
+            if (!f.exists())
+            {
+                f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            }
+
+            if (!f.exists())
+            {
+                DCIM_PATH = Environment.getExternalStorageDirectory().getAbsolutePath();
+                DCIM_PATH = DCIM_PATH + File.separator + "KRec";
+                f = new File(DCIM_PATH);
+                f.mkdirs();
+            }
+            else
+            {
+                DCIM_PATH = f.getAbsolutePath();
+            }*/
+
         }catch (Exception e)
         {
-            Toast.makeText(mContext, "DCIM 폴더를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, "저장 폴더를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show();
         }
 
         //m_strOutPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/KRec/"+today+".mp4";
